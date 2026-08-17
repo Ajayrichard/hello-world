@@ -1,10 +1,18 @@
-FROM maven:3.8.1-openjdk-8 AS build
+FROM maven:3.9.9-eclipse-temurin-21 AS build
+
 WORKDIR /app
+
 COPY pom.xml .
 COPY src ./src
-RUN mvn package
 
-FROM tomcat:9.0.53-jdk8
-RUN mkdir -p /usr/local/tomcat/webapps
-RUN chmod -R 777 /usr/local/tomcat/conf
-COPY --from=build /app/target/calculator-1.0-SNAPSHOT.war /usr/local/tomcat/webapps/calculator.war
+RUN mvn clean package -DskipTests
+
+FROM eclipse-temurin:21-jre
+
+WORKDIR /app
+
+COPY --from=build /app/target/*.jar app.jar
+
+EXPOSE 8080
+
+ENTRYPOINT ["java", "-jar", "app.jar"]
